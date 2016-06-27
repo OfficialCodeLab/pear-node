@@ -31,6 +31,8 @@ var transporter = nodemailer.createTransport({
     }
 });
 
+//nodemailer.createTransport('smtps://user%40gmail.com:pass@smtp.gmail.com');    ||NEW METHOD||
+
 /*======================================================================*\
     Set up firebase and database reference as variables
 \*======================================================================*/
@@ -56,6 +58,9 @@ ref.once("value", function() {
 firebase.database().ref('users').on('child_changed', function(snapshot) {
     var user = snapshot.val();
     if (user.accountType === "vendor" && user.vendorRequest === true) {
+        firebase.database().ref('users/' + snapshot.key).update({
+            vendorRequest: false
+        });
         if (user.email) {
             var mailOptions = {
                 from: 'info@pear.life', // sender address
