@@ -3,7 +3,11 @@
     Author: CodeLab (http://www.codelab.io)
     Version: 1.0
 \*======================================================================*/
-
+console.log("======================================================================\n" +
+    "Pear Node Server\n" +
+    "Author: CodeLab (http://www.codelab.io)\n" +
+    "Version: 1.0\n" +
+    "======================================================================\n")
 /*======================================================================*\
     Require Section
 \*======================================================================*/
@@ -27,7 +31,9 @@ var transporter = nodemailer.createTransport({
     }
 });
 
-// Set up Firebase as a variable
+/*======================================================================*\
+    Set up firebase and database reference as variables
+\*======================================================================*/
 firebase.initializeApp({
     serviceAccount: "credentials/pear-server-d23d792fe506.json",
     databaseURL: "https://pear-server.firebaseio.com"
@@ -36,18 +42,17 @@ firebase.initializeApp({
 var db = firebase.database();
 var ref = db.ref("restricted_access/secret_document");
 
-
+/*======================================================================*\
+    Once ref has been initialized and has a value, run this code once
+\*======================================================================*/
 ref.once("value", function() {
-    console.log("======================================================================\n"
-        + "Pear Node Server\n"
-        + "Author: CodeLab (http://www.codelab.io)\n"
-        + "Version: 1.0\n"
-        + "======================================================================\n"
-        + "Connection Established\n"
-        + "======================================================================"
-      )
+    console.log("Firebase: Connected to database successfully!\n")
 });
 
+
+/*======================================================================*\
+    If the child of a user changes, run this code.
+\*======================================================================*/
 firebase.database().ref('users').on('child_changed', function(snapshot) {
     var user = snapshot.val();
     if (user.accountType === "vendor" && user.vendorRequest === true) {
@@ -66,7 +71,22 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
                 }
                 console.log('Message sent: ' + info.response);
             });
-
         }
     }
 });
+
+/*======================================================================*\
+    Launch Web Server
+\*======================================================================*/
+app.get('/', function(req, res) {
+    res.send('Hello World');
+})
+
+var server = app.listen(8081, function() {
+
+    var host = server.address().address;
+    var port = server.address().port;
+
+    console.log("Web Server listening at localhost:" + port + "\n");
+
+})
