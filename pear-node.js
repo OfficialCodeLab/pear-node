@@ -64,6 +64,7 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
         if (user.email) {
             var mailOptions = {
                 from: 'info@pear.life', // sender address
+                replyTo: message.from, //Reply to address
                 to: user.email, // list of receivers
                 subject: 'Pear - You are now a registered vendor', // Subject line
                 html: 'Greetings from Pear!<br><br>You are now a registered vendor!<br>Good for you now go away<br><br>Regards<br>The Pear Tree.' // html body
@@ -78,6 +79,31 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
             });
         }
     }
+});
+
+/*======================================================================*\
+    If a new message request is created, run this.
+\*======================================================================*/
+firebase.database().ref('messages').on('child_added', function(snapshot) {
+    var message = snapshot.val();
+    
+    var mailOptions = {
+        from: message.from, // sender address
+        replyTo: message.from, //Reply to address
+        to: message.to, // list of receivers
+        subject: message.subject, // Subject line
+        html: message.html // html body
+    };
+
+    // send mail with defined transport object
+    transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Message sent: ' + info.response);
+        firebase.database().ref('messages/' + snapshot.key).remove();
+    });
+        
 });
 
 /*======================================================================*\
