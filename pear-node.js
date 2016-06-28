@@ -11,10 +11,16 @@ console.log("===================================================================
 /*======================================================================*\
     Require Section
 \*======================================================================*/
-
+var path = require('path');
+var EmailTemplates = require('swig-email-templates');
 var nodemailer = require('nodemailer');
 var firebase = require("firebase");
 var express = require("express");
+var templates = new EmailTemplates({
+  root: path.join(__dirname, "templates")
+});
+
+
 
 /*======================================================================*\
     Initialize Section
@@ -62,21 +68,29 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
             vendorRequest: false
         });
         if (user.email) {
-            var mailOptions = {
-                from: 'info@pear.life', // sender address
-                replyTo: message.from, //Reply to address
-                to: user.email, // list of receivers
-                subject: 'Pear - You are now a registered vendor', // Subject line
-                html: 'Greetings from Pear!<br><br>You are now a registered vendor!<br>Good for you now go away<br><br>Regards<br>The Pear Tree.' // html body
+            var vendorWelcome = {
+                name : user.name
             };
+            templates.render('registeredVendor.html', vendorWelcome, function(err, html, text) {
 
-            // send mail with defined transport object
-            transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    return console.log(error);
-                }
-                console.log('Message sent: ' + info.response);
+                var mailOptions = {
+                    from: 'info@pear.life', // sender address
+                    replyTo: 'info@pear.life', //Reply to address
+                    to: user.email, // list of receivers
+                    subject: 'Pear - You are now a registered vendor', // Subject line
+                    html: html, // html body
+                    text: text  //Text equivalent
+                };
+
+                // send mail with defined transport object
+                transporter.sendMail(mailOptions, function(error, info) {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    console.log('Message sent: ' + info.response);
+                });
             });
+
         }
     }
 });

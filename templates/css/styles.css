@@ -1,0 +1,19 @@
+.main-block {
+	color: black;
+	text-align: center;
+	padding-top: 40px;
+	padding-bottom: 40px;
+	padding-left: auto;
+	padding-right: auto;
+}
+
+.inner-block {
+	padding: 20px;
+	max-width:600px; 
+	text-align: center;  
+	display: inline-block;	
+	border-radius: 5px 5px 5px 5px;
+	-moz-border-radius: 5px 5px 5px 5px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+	border: 5px solid #f5565c;
+}
