@@ -75,7 +75,7 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
 
                 var mailOptions = {
                     from: 'info@pear.life', // sender address
-                    replyTo: 'info@pear.life', //Reply to address
+                    replyTo: 'noreply@pear.life', //Reply to address
                     to: user.email, // list of receivers
                     subject: 'Pear - You are now a registered vendor', // Subject line
                     html: html, // html body
@@ -100,22 +100,32 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
 \*======================================================================*/
 firebase.database().ref('messages').on('child_added', function(snapshot) {
     var message = snapshot.val();
-    
-    var mailOptions = {
-        from: message.from, // sender address
-        replyTo: message.from, //Reply to address
-        to: message.to, // list of receivers
-        subject: message.subject, // Subject line
-        html: message.html // html body
-    };
+    firebase.database().ref('users/' + message.senderId).once('value').then(function(_snapshot) {
+        var customMessage = {
+            senderName: _snapshot.val().name,
+            receiverName: message.receiverName,
+            messageText: message.html
+        };
+        templates.render('messageRequest.html', customMessage, function(err, html, text) {
+            var mailOptions = {
+                from: message.from, // sender address
+                replyTo: message.from, //Reply to address
+                to: message.to || "courtney@codelab.io", // list of receivers
+                subject: message.subject, // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
 
-    // send mail with defined transport object
-    transporter.sendMail(mailOptions, function(error, info) {
-        if (error) {
-            return console.log(error);
-        }
-        console.log('Message sent: ' + info.response);
-        firebase.database().ref('messages/' + snapshot.key).remove();
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+                firebase.database().ref('messages/' + snapshot.key).remove();
+            });
+        });
+      
     });
         
 });
