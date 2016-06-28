@@ -106,7 +106,7 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
             receiverName: message.receiverName,
             messageText: message.html
         };
-        templates.render('messageRequest.html', customMessage, function(err, html, text) {
+        templates.render('accountCreation.html', customMessage, function(err, html, text) {
             var mailOptions = {
                 from: message.from, // sender address
                 replyTo: message.from, //Reply to address
@@ -129,6 +129,43 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
     });
         
 });
+
+/*======================================================================*\
+    If a new vendor account is created, run this.
+\*======================================================================*/
+firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
+    var login = snapshot.val();
+    if(login.passTemp){
+        var userDetails = {
+            password: login.passTemp
+        };
+        firebase.database().ref('vendorLogins/' + snapshot.key).update({
+            passTemp: null
+        });
+        templates.render('accountCreation.html', userDetails, function(err, html, text) {
+            var mailOptions = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: login.email, // list of receivers
+                subject: "Pear - Vendor Account Created", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });        
+    }
+        
+});
+
+
+
 
 /*======================================================================*\
     Launch Web Server
