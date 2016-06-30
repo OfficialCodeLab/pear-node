@@ -106,7 +106,7 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
             receiverName: message.receiverName,
             messageText: message.html
         };
-        templates.render('accountCreation.html', customMessage, function(err, html, text) {
+        templates.render('messageRequest.html', customMessage, function(err, html, text) {
             var mailOptions = {
                 from: message.from, // sender address
                 replyTo: message.from, //Reply to address
@@ -164,7 +164,46 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
         
 });
 
+/*======================================================================*\
+    If a new guest is created, email them
+\*======================================================================*/
+firebase.database().ref('guests').on('child_added', function(snapshot) {
+    var guest = snapshot.val();
+    if(guest.mustEmail){
+        firebase.database().ref('weddings/' + guest.wedding).once('value').then(function(_snapshot) {
+            firebase.database().ref('users/' + _snapshot.val().user).once('value').then(function(__snapshot) {
+                var guestDetails = {
+                    name: guest.name,
+                    pearuser: __snapshot.val().name
+                };
+                templates.render('guestAdded.html', guestDetails, function(err, html, text) {
+                    var mailOptions = {
+                        from: "noreply@pear.life", // sender address
+                        replyTo: __snapshot.val().email || "noreply@pear.life", //Reply to address
+                        to: guest.email, // list of receivers
+                        subject: "Pear - Added To Wedding Guest List", // Subject line
+                        html: html, // html body
+                        text: text  //Text equivalent
+                    };
 
+                    // send mail with defined transport object
+                    transporter.sendMail(mailOptions, function(error, info) {
+                        if (error) {
+                            return console.log(error);
+                        }
+                        firebase.database().ref('guests/' + snapshot.key).update({
+                            mustEmail: null
+                        });
+                        console.log('Message sent: ' + info.response);
+                    });
+                }); 
+                
+
+            });
+        });       
+    }
+        
+});
 
 
 /*======================================================================*\

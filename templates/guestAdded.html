@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		{% block head %}
+			<link rel="stylesheet" href="css/styles.css">
+			<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+		{% endblock %}
+	</head>
+		<div class="main-block">
+			<div class="inner-block">
+				<!-- <img src="http://i.imgur.com/KFev4iO.png" style="height: 200px; width: auto"> -->
+				<img src="http://i.imgur.com/llnJ3wK.png" style="max-height: 200px; width: auto">
+				<br><br>
+				<p>Hello, {{name}}</p>
+				<p><br>Greetings from all of us at Pear, The Wedding Planner.</p><br>
+				<p>Your friend, {{pearuser}}, has added you to their guest list on <a href="http://pear.life">Pear</a><br><br>
+				Feel free to contact them to RSVP or reply to this email to send them an email.<br><br>
+				Regards,<br>
+				The Pear Team.</p>
+			</div>
+			<div style="padding-top: 30px;">
+				<p>Have a look at Pear and help with the wedding!</p>
+				<a class="btn btn-default" href="https://www.pear.life" role="button">Pear</a>
+			</div>
+		</div>
+</html>
