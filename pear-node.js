@@ -85,6 +85,7 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
                 // send mail with defined transport object
                 transporter.sendMail(mailOptions, function(error, info) {
                     if (error) {
+                        console.log("VENDOR REGISTRATION ERROR");
                         return console.log(error);
                     }
                     console.log('Message sent: ' + info.response);
@@ -119,6 +120,7 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
             // send mail with defined transport object
             transporter.sendMail(mailOptions, function(error, info) {
                 if (error) {
+                    console.log("MESSAGE REQUEST ERROR");
                     return console.log(error);
                 }
                 console.log('Message sent: ' + info.response);
@@ -155,6 +157,7 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
             // send mail with defined transport object
             transporter.sendMail(mailOptions, function(error, info) {
                 if (error) {
+                    console.log("VENDOR DOESN'T HAVE EMAIL");
                     return console.log(error);
                 }
                 console.log('Message sent: ' + info.response);
@@ -189,6 +192,9 @@ firebase.database().ref('guests').on('child_added', function(snapshot) {
                     // send mail with defined transport object
                     transporter.sendMail(mailOptions, function(error, info) {
                         if (error) {
+                            firebase.database().ref('guests/' + snapshot.key).update({
+                                mustEmail: null
+                            });
                             return console.log(error);
                         }
                         firebase.database().ref('guests/' + snapshot.key).update({
@@ -203,6 +209,29 @@ firebase.database().ref('guests').on('child_added', function(snapshot) {
         });       
     }
         
+});
+
+/*======================================================================*\
+    If a cat-item is deleted, removed favourites from users
+\*======================================================================*/
+firebase.database().ref('catItems').on('child_removed', function(snapshot) {
+    var item = snapshot.val();                  //the deleted item
+    var favouritedBy = item.favouritedBy;       //list of users who favourited the item
+    var fkey = snapshot.key;                    //key of the deleted item
+    //Iterate through all users
+    for (var key in favouritedBy){
+        if (favouritedBy.hasOwnProperty(key)) {
+            //Get the user
+            firebase.database().ref('users/' + key).once('value').then(function(_snapshot) {
+                var _user = _snapshot.val();
+                var favourites = _user.favourites;
+                delete favourites[fkey];        //Delete favourite key-value pair
+                firebase.database().ref('users/' + key).update({
+                    favourites: favourites
+                });
+            });
+        }
+    }
 });
 
 
