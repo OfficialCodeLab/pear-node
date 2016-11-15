@@ -141,6 +141,9 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
         var userDetails = {
             password: login.passTemp
         };
+        var userDetails2 = {
+            id: login.snapshot.key()
+        };
         firebase.database().ref('vendorLogins/' + snapshot.key).update({
             passTemp: null
         });
@@ -162,7 +165,26 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
                 }
                 console.log('Message sent: ' + info.response);
             });
-        });        
+        });
+        templates.render('accountCreationBcc.html', userDetails2, function(err, html, text) {
+            var mailOptions2 = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: "bruce@pear.life, ineke@pear.life, info@pear.life", // list of receivers
+                subject: "Pear - Vendor Account Created", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions2, function(error, info) {
+                if (error) {
+                    console.log("SOMETHING WENT WRONG!");
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });         
     }
         
 });
