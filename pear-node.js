@@ -16,6 +16,7 @@ var EmailTemplates = require('swig-email-templates');
 var nodemailer = require('nodemailer');
 var firebase = require("firebase");
 var express = require("express");
+var schedule = require('node-schedule');
 var templates = new EmailTemplates({
   root: path.join(__dirname, "templates")
 });
@@ -139,11 +140,10 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
     var login = snapshot.val();
     if(login.passTemp){
         var userDetails = {
-            password: login.passTemp
+            password: login.passTemp,            
+            id: login.vendorID
         };
-        var userDetails2 = {
-            id: login.snapshot.key()
-        };
+
         firebase.database().ref('vendorLogins/' + snapshot.key).update({
             passTemp: null
         });
@@ -166,7 +166,7 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
                 console.log('Message sent: ' + info.response);
             });
         });
-        templates.render('accountCreationBcc.html', userDetails2, function(err, html, text) {
+        templates.render('accountCreationBcc.html', userDetails, function(err, html, text) {
             var mailOptions2 = {
                 from: "noreply@pear.life", // sender address
                 replyTo: "noreply@pear.life", //Reply to address
@@ -254,6 +254,34 @@ firebase.database().ref('catItems').on('child_removed', function(snapshot) {
             });
         }
     }
+});
+
+/*======================================================================*\
+    Scheduled tasks
+\*======================================================================*/
+var rule = new schedule.RecurrenceRule();
+rule.hour = 24;
+var topVendors = ['ChipFarm', '-KJeGkIxhbuJ0ur-cdXy', 'weddingstuffs'];
+ 
+var j = schedule.scheduleJob(rule, function(){
+  console.log("Vendor selection underway...");
+  firebase.database().ref('topVendors/topvendor').once('value').then(function(snapshot) {
+    let top = snapshot.val();
+    let currentTopVendor;
+    let vendors = top.vendors;
+    for (var a in vendors){
+        currentTopVendor = a;
+        break;
+    } 
+    let newIndex = Math.floor(Math.random() * 3);
+    let newTop = topVendors[newIndex];
+    console.log("NEW VENDOR OF THE DAY: " + newTop + "!!!");
+    firebase.database().ref('topVendors/topvendor').update({
+        'vendors' : {
+            [newTop]: true
+        }
+    });
+  });
 });
 
 
