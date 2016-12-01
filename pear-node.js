@@ -14,7 +14,8 @@ console.log("===================================================================
 var path = require('path');
 var EmailTemplates = require('swig-email-templates');
 var nodemailer = require('nodemailer');
-var firebase = require("firebase");
+var admin = require("firebase-admin");
+var rek = require('rekuire');
 var express = require("express");
 var schedule = require('node-schedule');
 var templates = new EmailTemplates({
@@ -43,29 +44,41 @@ var transporter = nodemailer.createTransport({
 /*======================================================================*\
     Set up firebase and database reference as variables
 \*======================================================================*/
-firebase.initializeApp({
-    serviceAccount: "credentials/pear-server-d23d792fe506.json",
-    databaseURL: "https://pear-server.firebaseio.com"
+// firebase.initializeApp({
+//     serviceAccount: "credentials/pear-server-d23d792fe506.json",
+//     databaseURL: "https://pear-server.firebaseio.com"
+// });
+
+var serviceAccount = rek("credentials/pear-server-fa34b7678880.json");
+
+//console.log(serviceAccount)
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://pear-server.firebaseio.com"
 });
 
-var db = firebase.database();
+// As an admin, the app has access to read and write all data, regardless of Security Rules
+var db = admin.database();
 var ref = db.ref("restricted_access/secret_document");
+ref.once("value", function(snapshot) {
+  console.log(snapshot.val());
+});
+
+console.log("kill me");
 
 /*======================================================================*\
     Once ref has been initialized and has a value, run this code once
 \*======================================================================*/
-ref.once("value", function() {
-    console.log("Firebase: Connected to database successfully!\n")
-});
 
 
 /*======================================================================*\
     If the child of a user changes, run this code.
 \*======================================================================*/
-firebase.database().ref('users').on('child_changed', function(snapshot) {
+admin.database().ref('users').on('child_changed', function(snapshot) {
     var user = snapshot.val();
     if (user.accountType === "vendor" && user.vendorRequest === true) {
-        firebase.database().ref('users/' + snapshot.key).update({
+        admin.database().ref('users/' + snapshot.key).update({
             vendorRequest: false
         });
         if (user.email) {
@@ -100,10 +113,10 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
 /*======================================================================*\
     If a new message request is created, run this.
 \*======================================================================*/
-firebase.database().ref('messages').on('child_added', function(snapshot) {
+admin.database().ref('messages').on('child_added', function(snapshot) {
     console.log("New message request");
     var message = snapshot.val();
-    firebase.database().ref('users/' + message.senderId).once('value').then(function(_snapshot) {
+    admin.database().ref('users/' + message.senderId).once('value').then(function(_snapshot) {
         var customMessage = {
             senderName: _snapshot.val().name,
             receiverName: message.receiverName,
@@ -126,7 +139,7 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
                     return console.log(error);
                 }
                 console.log('Message sent: ' + info.response);
-                firebase.database().ref('messages/' + snapshot.key).remove();
+                admin.database().ref('messages/' + snapshot.key).remove();
             });
         });
       
@@ -137,7 +150,7 @@ firebase.database().ref('messages').on('child_added', function(snapshot) {
 /*======================================================================*\
     If a new vendor account is created, run this.
 \*======================================================================*/
-firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
+admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
     var login = snapshot.val();
     if(login.passTemp){
         var userDetails = {
@@ -145,7 +158,7 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
             id: login.vendorID
         };
 
-        firebase.database().ref('vendorLogins/' + snapshot.key).update({
+        admin.database().ref('vendorLogins/' + snapshot.key).update({
             passTemp: null
         });
         templates.render('accountCreation.html', userDetails, function(err, html, text) {
@@ -193,11 +206,11 @@ firebase.database().ref('vendorLogins').on('child_added', function(snapshot) {
 /*======================================================================*\
     If a new guest is created, email them
 \*======================================================================*/
-firebase.database().ref('guests').on('child_added', function(snapshot) {
+admin.database().ref('guests').on('child_added', function(snapshot) {
     var guest = snapshot.val();
     if(guest.mustEmail){
-        firebase.database().ref('weddings/' + guest.wedding).once('value').then(function(_snapshot) {
-            firebase.database().ref('users/' + _snapshot.val().user).once('value').then(function(__snapshot) {
+        admin.database().ref('weddings/' + guest.wedding).once('value').then(function(_snapshot) {
+            admin.database().ref('users/' + _snapshot.val().user).once('value').then(function(__snapshot) {
                 var guestDetails = {
                     name: guest.name,
                     pearuser: __snapshot.val().name
@@ -220,7 +233,7 @@ firebase.database().ref('guests').on('child_added', function(snapshot) {
                             });
                             return console.log(error);
                         }
-                        firebase.database().ref('guests/' + snapshot.key).update({
+                        admin.database().ref('guests/' + snapshot.key).update({
                             mustEmail: null
                         });
                         console.log('Message sent: ' + info.response);
@@ -237,7 +250,7 @@ firebase.database().ref('guests').on('child_added', function(snapshot) {
 /*======================================================================*\
     If a cat-item is deleted, removed favourites from users
 \*======================================================================*/
-firebase.database().ref('catItems').on('child_removed', function(snapshot) {
+admin.database().ref('catItems').on('child_removed', function(snapshot) {
     var item = snapshot.val();                  //the deleted item
     var favouritedBy = item.favouritedBy;       //list of users who favourited the item
     var fkey = snapshot.key;                    //key of the deleted item
@@ -245,11 +258,11 @@ firebase.database().ref('catItems').on('child_removed', function(snapshot) {
     for (var key in favouritedBy){
         if (favouritedBy.hasOwnProperty(key)) {
             //Get the user
-            firebase.database().ref('users/' + key).once('value').then(function(_snapshot) {
+            admin.database().ref('users/' + key).once('value').then(function(_snapshot) {
                 var _user = _snapshot.val();
                 var favourites = _user.favourites;
                 delete favourites[fkey];        //Delete favourite key-value pair
-                firebase.database().ref('users/' + key).update({
+                admin.database().ref('users/' + key).update({
                     favourites: favourites
                 });
             });
@@ -266,7 +279,7 @@ var topVendors = ['ChipFarm', '-KJeGkIxhbuJ0ur-cdXy', 'weddingstuffs'];
  
 var j = schedule.scheduleJob(rule, function(){
   console.log("Vendor selection underway...");
-  firebase.database().ref('topVendors/topvendor').once('value').then(function(snapshot) {
+  admin.database().ref('topVendors/topvendor').once('value').then(function(snapshot) {
     let top = snapshot.val();
     let currentTopVendor;
     let vendors = top.vendors;
@@ -277,7 +290,7 @@ var j = schedule.scheduleJob(rule, function(){
     let newIndex = Math.floor(Math.random() * 3);
     let newTop = topVendors[newIndex];
     console.log("NEW VENDOR OF THE DAY: " + newTop + "!!!");
-    firebase.database().ref('topVendors/topvendor').update({
+    admin.database().ref('topVendors/topvendor').update({
         'vendors' : {
             [newTop]: true
         }

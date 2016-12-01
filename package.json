@@ -21,8 +21,10 @@
     "cookie-parser": "^1.4.3",
     "express": "^4.14.0",
     "firebase": "^3.0.5",
+    "firebase-admin": "^4.0.3",
     "multer": "^1.1.0",
     "nodemailer": "^2.4.2",
+    "rekuire": "^0.1.9",
     "swig-email-templates": "^3.0.0"
   }
 }
