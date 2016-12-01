@@ -49,7 +49,7 @@ var transporter = nodemailer.createTransport({
 //     databaseURL: "https://pear-server.firebaseio.com"
 // });
 
-var serviceAccount = rek("credentials/pear-server-fa34b7678880.json");
+var serviceAccount = rek("credentials/pear-server-d23d792fe506.json");
 
 //console.log(serviceAccount)
 
@@ -228,7 +228,7 @@ admin.database().ref('guests').on('child_added', function(snapshot) {
                     // send mail with defined transport object
                     transporter.sendMail(mailOptions, function(error, info) {
                         if (error) {
-                            firebase.database().ref('guests/' + snapshot.key).update({
+                            admin.database().ref('guests/' + snapshot.key).update({
                                 mustEmail: null
                             });
                             return console.log(error);
@@ -273,30 +273,30 @@ admin.database().ref('catItems').on('child_removed', function(snapshot) {
 /*======================================================================*\
     Scheduled tasks
 \*======================================================================*/
-var rule = new schedule.RecurrenceRule();
-rule.hour = 24;
-var topVendors = ['ChipFarm', '-KJeGkIxhbuJ0ur-cdXy', 'weddingstuffs'];
+// var rule = new schedule.RecurrenceRule();
+// rule.hour = 24;
+// var topVendors = ['ChipFarm', '-KJeGkIxhbuJ0ur-cdXy', 'weddingstuffs'];
  
-var j = schedule.scheduleJob(rule, function(){
-  console.log("Vendor selection underway...");
-  admin.database().ref('topVendors/topvendor').once('value').then(function(snapshot) {
-    let top = snapshot.val();
-    let currentTopVendor;
-    let vendors = top.vendors;
-    for (var a in vendors){
-        currentTopVendor = a;
-        break;
-    } 
-    let newIndex = Math.floor(Math.random() * 3);
-    let newTop = topVendors[newIndex];
-    console.log("NEW VENDOR OF THE DAY: " + newTop + "!!!");
-    admin.database().ref('topVendors/topvendor').update({
-        'vendors' : {
-            [newTop]: true
-        }
-    });
-  });
-});
+// var j = schedule.scheduleJob(rule, function(){
+//   console.log("Vendor selection underway...");
+//   admin.database().ref('topVendors/topvendor').once('value').then(function(snapshot) {
+//     let top = snapshot.val();
+//     let currentTopVendor;
+//     let vendors = top.vendors;
+//     for (var a in vendors){
+//         currentTopVendor = a;
+//         break;
+//     } 
+//     let newIndex = Math.floor(Math.random() * 3);
+//     let newTop = topVendors[newIndex];
+//     console.log("NEW VENDOR OF THE DAY: " + newTop + "!!!");
+//     admin.database().ref('topVendors/topvendor').update({
+//         'vendors' : {
+//             [newTop]: true
+//         }
+//     });
+//   });
+// });
 
 
 /*======================================================================*\
