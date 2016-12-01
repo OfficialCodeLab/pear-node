@@ -101,6 +101,7 @@ firebase.database().ref('users').on('child_changed', function(snapshot) {
     If a new message request is created, run this.
 \*======================================================================*/
 firebase.database().ref('messages').on('child_added', function(snapshot) {
+    console.log("New message request");
     var message = snapshot.val();
     firebase.database().ref('users/' + message.senderId).once('value').then(function(_snapshot) {
         var customMessage = {
