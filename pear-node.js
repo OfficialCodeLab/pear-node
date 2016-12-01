@@ -61,16 +61,15 @@ admin.initializeApp({
 // As an admin, the app has access to read and write all data, regardless of Security Rules
 var db = admin.database();
 var ref = db.ref("restricted_access/secret_document");
-ref.once("value", function(snapshot) {
-  console.log(snapshot.val());
-});
 
-console.log("kill me");
 
 /*======================================================================*\
     Once ref has been initialized and has a value, run this code once
 \*======================================================================*/
 
+ref.once("value", function(snapshot) {
+  console.log(snapshot.val());
+});
 
 /*======================================================================*\
     If the child of a user changes, run this code.
