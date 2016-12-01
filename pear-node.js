@@ -44,10 +44,6 @@ var transporter = nodemailer.createTransport({
 /*======================================================================*\
     Set up firebase and database reference as variables
 \*======================================================================*/
-// firebase.initializeApp({
-//     serviceAccount: "credentials/pear-server-d23d792fe506.json",
-//     databaseURL: "https://pear-server.firebaseio.com"
-// });
 
 var serviceAccount = rek("credentials/pear-server-d23d792fe506.json");
 
@@ -68,7 +64,7 @@ var ref = db.ref("restricted_access/secret_document");
 \*======================================================================*/
 
 ref.once("value", function(snapshot) {
-  console.log(snapshot.val());
+  console.log("Connected to Firebase successfully!");
 });
 
 /*======================================================================*\
@@ -270,7 +266,7 @@ admin.database().ref('catItems').on('child_removed', function(snapshot) {
 });
 
 /*======================================================================*\
-    Scheduled tasks
+    Scheduled tasks - This breaks server, leave out for now
 \*======================================================================*/
 // var rule = new schedule.RecurrenceRule();
 // rule.hour = 24;
