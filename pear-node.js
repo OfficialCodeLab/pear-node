@@ -17,7 +17,7 @@ var nodemailer = require('nodemailer');
 var admin = require("firebase-admin");
 var rek = require('rekuire');
 var express = require("express");
-var schedule = require('node-schedule');
+// var schedule = require('node-schedule');
 var templates = new EmailTemplates({
   root: path.join(__dirname, "templates")
 });
