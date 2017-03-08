@@ -152,50 +152,60 @@ admin.database().ref('users').on('child_added', function(snapshot) {
     var userDetails = {
         name: user.name
     };
-    if(user.accountType){ // VENDOR
-        templates.render('accountCreationVendor.html', userDetails, function(err, html, text) {
-            var mailOptions = {
-                from: "noreply@pear.life", // sender address
-                replyTo: "noreply@pear.life", //Reply to address
-                to: user.email, // list of receivers
-                subject: "Bloom - Vendor Account Created", // Subject line
-                html: html, // html body
-                text: text  //Text equivalent
-            };
+    if(user.isNewToBloom){
+        if(user.accountType){ // VENDOR
+            templates.render('accountCreationVendor.html', userDetails, function(err, html, text) {
+                var mailOptions = {
+                    from: "noreply@pear.life", // sender address
+                    replyTo: "noreply@pear.life", //Reply to address
+                    to: user.email, // list of receivers
+                    subject: "Bloom - Vendor Account Created", // Subject line
+                    html: html, // html body
+                    text: text  //Text equivalent
+                };
 
-            // send mail with defined transport object
-            transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    console.log("VENDOR DOESN'T HAVE EMAIL");
-                    return console.log(error);
-                }
-                console.log('Message sent: ' + info.response);
+                // send mail with defined transport object
+                transporter.sendMail(mailOptions, function(error, info) {
+                    if (error) {
+                        console.log("VENDOR DOESN'T HAVE EMAIL");
+                        return console.log(error);
+                    }
+                    console.log('Message sent: ' + info.response);
+                });
             });
-        });
-        
-
-        //BCC EMAIL HERE
-
-    } else { // USER
-        templates.render('accountCreationUser.html', userDetails, function(err, html, text) {
-            var mailOptions = {
-                from: "noreply@pear.life", // sender address
-                replyTo: "noreply@pear.life", //Reply to address
-                to: user.email, // list of receivers
-                subject: "Bloom - User Account Created", // Subject line
-                html: html, // html body
-                text: text  //Text equivalent
-            };
-
-            // send mail with defined transport object
-            transporter.sendMail(mailOptions, function(error, info) {
-                if (error) {
-                    console.log("USER DOESN'T HAVE EMAIL");
-                    return console.log(error);
-                }
-                console.log('Message sent: ' + info.response);
+            
+            admin.database().ref('users/' + snapshot.key).update({
+                isNewToBloom: null
             });
-        });
+            
+
+            //BCC EMAIL HERE
+
+        } else { // USER
+            templates.render('accountCreationUser.html', userDetails, function(err, html, text) {
+                var mailOptions = {
+                    from: "noreply@pear.life", // sender address
+                    replyTo: "noreply@pear.life", //Reply to address
+                    to: user.email, // list of receivers
+                    subject: "Bloom - User Account Created", // Subject line
+                    html: html, // html body
+                    text: text  //Text equivalent
+                };
+
+                // send mail with defined transport object
+                transporter.sendMail(mailOptions, function(error, info) {
+                    if (error) {
+                        console.log("USER DOESN'T HAVE EMAIL");
+                        return console.log(error);
+                    }
+                    console.log('Message sent: ' + info.response);
+                });
+            });
+
+            admin.database().ref('users/' + snapshot.key).update({
+                isNewToBloom: null
+            });
+        }        
     }
 
 
