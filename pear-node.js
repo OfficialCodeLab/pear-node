@@ -4,7 +4,7 @@
     Version: 1.0
 \*======================================================================*/
 console.log("======================================================================\n" +
-    "Pear Node Server\n" +
+    "Bloom Node Server\n" +
     "Author: CodeLab (http://www.codelab.io)\n" +
     "Version: 1.0\n" +
     "======================================================================\n")
@@ -143,6 +143,65 @@ admin.database().ref('messages').on('child_added', function(snapshot) {
 });
 
 /*======================================================================*\
+    If a new account is created, run this.
+\*======================================================================*/
+admin.database().ref('users').on('child_added', function(snapshot) {
+
+    var user = snapshot.val();
+
+    var userDetails = {
+        name: user.name
+    };
+    if(user.accountType){ // VENDOR
+        templates.render('accountCreationVendor.html', userDetails, function(err, html, text) {
+            var mailOptions = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: user.email, // list of receivers
+                subject: "Bloom - Vendor Account Created", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    console.log("VENDOR DOESN'T HAVE EMAIL");
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });
+        
+
+        //BCC EMAIL HERE
+
+    } else { // USER
+        templates.render('accountCreationUser.html', userDetails, function(err, html, text) {
+            var mailOptions = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: user.email, // list of receivers
+                subject: "Bloom - User Account Created", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    console.log("USER DOESN'T HAVE EMAIL");
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });
+    }
+
+
+});
+
+/*======================================================================*\
     If a new vendor account is created, run this.
 \*======================================================================*/
 admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
@@ -156,6 +215,8 @@ admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
         admin.database().ref('vendorLogins/' + snapshot.key).update({
             passTemp: null
         });
+
+        /*
         templates.render('accountCreation.html', userDetails, function(err, html, text) {
             var mailOptions = {
                 from: "noreply@pear.life", // sender address
@@ -193,7 +254,7 @@ admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
                 }
                 console.log('Message sent: ' + info.response);
             });
-        });         
+        });    */     
     }
         
 });
@@ -240,6 +301,48 @@ admin.database().ref('guests').on('child_added', function(snapshot) {
         });       
     }
         
+});
+
+
+/*======================================================================*\
+    If an inner circle invite is created
+\*======================================================================*/
+admin.database().ref('innerCircleInvites').on('child_added', function(snapshot) {
+
+    var invite = snapshot.val();
+
+    var acceptUrl = "https://bloomweddings.co.za/favourites/innercircle?accept="+invite.userId;
+
+    var details = {
+        name: invite.name,
+        _name: invite.sender,
+        imgUrl: invite.imgUrl,
+        acceptUrl: acceptUrl
+    };
+
+    if(true){ // Edit preferences will change this
+        templates.render('innerCircleInvite.html', details, function(err, html, text) {
+            var mailOptions = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: invite.emailId, // list of receivers
+                subject: "Bloom - Inner Circle Invite", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    console.log("NO INVITE EMAIL ASSOCIATED");
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });
+
+    } 
+
 });
 
 /*======================================================================*\
