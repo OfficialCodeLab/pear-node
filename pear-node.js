@@ -1,12 +1,12 @@
 /*======================================================================*\
-    Pear Node Server
+    Bloom Node Server
     Author: CodeLab (http://www.codelab.io)
-    Version: 1.0
+    Version: BETA 1.0.0
 \*======================================================================*/
 console.log("======================================================================\n" +
     "Bloom Node Server\n" +
     "Author: CodeLab (http://www.codelab.io)\n" +
-    "Version: 1.0\n" +
+    "Version: BETA 1.0.0\n" +
     "======================================================================\n")
 /*======================================================================*\
     Require Section
@@ -23,31 +23,30 @@ var templates = new EmailTemplates({
 });
 
 
-
 /*======================================================================*\
     Initialize Section
 \*======================================================================*/
+
 // Set up Express.js app
 var app = express();
+
+var mailLogin = rek("credentials/bloom-gmail.json");
 
 // Set up nodemailer transporter with an account
 var transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
-        user: 'pearmailserver@gmail.com',
-        pass: 'P34rl1f3'
+        user: mailLogin.email,
+        pass: mailLogin.pass
     }
 });
 
-//nodemailer.createTransport('smtps://user%40gmail.com:pass@smtp.gmail.com');    ||NEW METHOD||
 
 /*======================================================================*\
     Set up firebase and database reference as variables
 \*======================================================================*/
 
 var serviceAccount = rek("credentials/pear-server-d23d792fe506.json");
-
-//console.log(serviceAccount)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -66,6 +65,7 @@ var ref = db.ref("restricted_access/secret_document");
 ref.once("value", function(snapshot) {
   console.log("Connected to Firebase successfully!");
 });
+
 
 /*======================================================================*\
     If the child of a user changes, run this code.
@@ -142,6 +142,7 @@ admin.database().ref('messages').on('child_added', function(snapshot) {
         
 });
 
+
 /*======================================================================*\
     If a new account is created, run this.
 \*======================================================================*/
@@ -153,33 +154,7 @@ admin.database().ref('users').on('child_added', function(snapshot) {
         name: user.name
     };
     if(user.isNewToBloom){
-        if(user.accountType){ // VENDOR
-            templates.render('accountCreationVendor.html', userDetails, function(err, html, text) {
-                var mailOptions = {
-                    from: "noreply@pear.life", // sender address
-                    replyTo: "noreply@pear.life", //Reply to address
-                    to: user.email, // list of receivers
-                    subject: "Bloom - Vendor Account Created", // Subject line
-                    html: html, // html body
-                    text: text  //Text equivalent
-                };
-
-                // send mail with defined transport object
-                transporter.sendMail(mailOptions, function(error, info) {
-                    if (error) {
-                        console.log("VENDOR DOESN'T HAVE EMAIL");
-                        return console.log(error);
-                    }
-                    console.log('Message sent: ' + info.response);
-                });
-            });
-            
-            admin.database().ref('users/' + snapshot.key).update({
-                isNewToBloom: null
-            });
-            
-
-            //BCC EMAIL HERE
+        if(user.accountType){  // VENDOR. Mailed below
 
         } else { // USER
             templates.render('accountCreationUser.html', userDetails, function(err, html, text) {
@@ -226,6 +201,26 @@ admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
             passTemp: null
         });
 
+        templates.render('accountCreationVendor.html', userDetails, function(err, html, text) {
+            var mailOptions = {
+                from: "noreply@pear.life", // sender address
+                replyTo: "noreply@pear.life", //Reply to address
+                to: login.email, // list of receivers
+                subject: "Bloom - Vendor Account Created", // Subject line
+                html: html, // html body
+                text: text  //Text equivalent
+            };
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, function(error, info) {
+                if (error) {
+                    console.log("VENDOR DOESN'T HAVE EMAIL");
+                    return console.log(error);
+                }
+                console.log('Message sent: ' + info.response);
+            });
+        });
+
         /*
         templates.render('accountCreation.html', userDetails, function(err, html, text) {
             var mailOptions = {
@@ -246,12 +241,15 @@ admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
                 console.log('Message sent: ' + info.response);
             });
         });
+
+        */
+
         templates.render('accountCreationBcc.html', userDetails, function(err, html, text) {
             var mailOptions2 = {
                 from: "noreply@pear.life", // sender address
                 replyTo: "noreply@pear.life", //Reply to address
                 to: "bruce@pear.life, ineke@pear.life, info@pear.life", // list of receivers
-                subject: "Pear - Vendor Account Created", // Subject line
+                subject: "Bloom - Vendor Account Created", // Subject line
                 html: html, // html body
                 text: text  //Text equivalent
             };
@@ -264,10 +262,11 @@ admin.database().ref('vendorLogins').on('child_added', function(snapshot) {
                 }
                 console.log('Message sent: ' + info.response);
             });
-        });    */     
+        });         
     }
         
 });
+
 
 /*======================================================================*\
     If a new guest is created, email them
@@ -286,7 +285,7 @@ admin.database().ref('guests').on('child_added', function(snapshot) {
                         from: "noreply@pear.life", // sender address
                         replyTo: __snapshot.val().email || "noreply@pear.life", //Reply to address
                         to: guest.email, // list of receivers
-                        subject: "Pear - Added To Wedding Guest List", // Subject line
+                        subject: "Bloom - Added To Wedding Guest List", // Subject line
                         html: html, // html body
                         text: text  //Text equivalent
                     };
